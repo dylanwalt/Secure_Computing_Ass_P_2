@@ -1,0 +1,9 @@
+Why dependency management matters:
+- Modern applications include large dependency trees (direct + transitive). Each dependency expands the attack surface, and known vulnerabilities (CVEs) are frequently discovered in widely used packages.
+- Patch windows are small: once a CVE is published, exploits often appear quickly, so unattended outdated dependencies create real exposure.
+- Compliance and governance typically require that known vulnerable components be identified and remediated in a timely manner.
+
+How SCA tools improve DevSecOps security:
+- SCA tools (including GitHub Dependabot alerts) continuously scan dependency manifests/lockfiles and compare them against vulnerability advisories.
+- They help teams prioritize by severity (CVSS / Critical–Low) and provide remediation guidance (patched versions).
+- In CI/CD they can enforce security gates (fail builds on high/critical CVEs), generate SBOMs, and keep dependency risk visible throughout the SDLC.

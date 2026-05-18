@@ -1,0 +1,333 @@
+ 718: % ============================================================
+ 719: \section{Practical DevSecOps Lab: OWASP ZAP Vulnerability Assessment}
+ 720: 
+ 721: % ----
+ 722: \subsection{Introduction}
+ 723: 
+ 724: This report documents a Dynamic Application Security Testing (DAST) exercise performed
+ 725: using OWASP ZAP \citep{owaspzap} against the OWASP Juice Shop
+ 726: \citep{owaspjuiceshop} --- a deliberately vulnerable web application designed for security
+ 727: training. The objective was to demonstrate automated vulnerability discovery within a
+ 728: DevSecOps context, identify real-world application security weaknesses, and evaluate the
+ 729: effectiveness of DAST as a pipeline control. The assessment identified one high-risk
+ 730: vulnerability (SQL Injection) and two medium-risk vulnerabilities (missing Content Security
+ 731: Policy header and missing Anti-CSRF tokens).
+ 732: 
+ 733: % ----
+ 734: \subsection{Environment Setup}
+ 735: 
+ 736: \subsubsection*{Target Application: OWASP Juice Shop}
+ 737: 
+ 738: OWASP Juice Shop was deployed locally using Docker:
+ 739: 
+ 740: \begin{lstlisting}[language=bash, caption={Deploy OWASP Juice Shop via Docker}]
+ 741: docker pull bkimminich/juice-shop
+ 742: docker run -d -p 3000:3000 bkimminich/juice-shop
+ 743: \end{lstlisting}
+ 744: 
+ 745: The application was accessible at \texttt{http://localhost:3000}. Juice Shop is a
+ 746: Node.js/Express single-page application intentionally containing OWASP Top 10
+ 747: vulnerabilities, making it an ideal DAST training target.
+ 748: 
+ 749: \subsubsection*{OWASP ZAP Installation}
+ 750: 
+ 751: OWASP ZAP (version 2.14+) was downloaded from \texttt{https://www.zaproxy.org/download/}
+ 752: and installed on the host machine. The Community Edition provides all features required for
+ 753: this assessment.
+ 754: 
+ 755: \screenshot{Insert screenshot showing OWASP ZAP main interface after launch, with the
+ 756: target URL \texttt{http://localhost:3000} visible in the URL bar.}
+ 757: 
+ 758: \subsubsection*{Proxy Configuration}
+ 759: 
+ 760: ZAP was configured as an intercepting proxy:
+ 761: \begin{enumerate}
+ 762:   \item ZAP proxy listener set to \texttt{localhost:8080} (Tools $\to$ Options $\to$
+ 763:     Local Proxies).
+ 764:   \item Firefox browser configured to use manual proxy \texttt{127.0.0.1:8080} for all
+ 765:     traffic.
+ 766:   \item ZAP's dynamic SSL certificate exported and imported into Firefox's certificate
+ 767:     store to enable HTTPS interception.
+ 768: \end{enumerate}
+ 769: 
+ 770: \screenshot{Insert screenshot of ZAP proxy settings (Tools $\to$ Options $\to$ Local
+ 771: Proxies) showing the proxy configured on port 8080.}
+ 772: 
+ 773: \screenshot{Insert screenshot of Firefox manual proxy configuration dialog showing
+ 774: 127.0.0.1 and port 8080.}
+ 775: 
+ 776: % ----
+ 777: \subsection{Scan Configuration}
+ 778: 
+ 779: \subsubsection*{Authentication Setup}
+ 780: 
+ 781: Before initiating the spider, the browser was used to manually log in to Juice Shop using
+ 782: the test account credentials (\texttt{admin@juice-sh.op} / \texttt{admin123}), allowing
+ 783: ZAP to capture the authenticated session token in the Sites tree.
+ 784: 
+ 785: \subsubsection*{Traditional Spider (Crawling)}
+ 786: 
+ 787: The Traditional Spider was launched against \texttt{http://localhost:3000}:
+ 788: \begin{itemize}
+ 789:   \item Navigate to: \textit{Tools $\to$ Spider $\to$ New Scan}
+ 790:   \item Starting URL: \texttt{http://localhost:3000}
+ 791:   \item Maximum depth: 5; Maximum children: 10
+ 792:   \item The spider crawled 80+ URLs including REST API endpoints, static assets, and
+ 793:     form submission endpoints.
+ 794: \end{itemize}
+ 795: 
+ 796: \screenshot{Insert screenshot of the ZAP Spider scan results showing the list of
+ 797: discovered URLs and endpoints (Sites tree populated with Juice Shop paths).}
+ 798: 
+ 799: \subsubsection*{Active Scan}
+ 800: 
+ 801: Following the spider, an Active Scan was launched to probe discovered endpoints for
+ 802: vulnerabilities:
+ 803: \begin{itemize}
+ 804:   \item Navigate to: \textit{Tools $\to$ Active Scan $\to$ New Scan}
+ 805:   \item Target: \texttt{http://localhost:3000}
+ 806:   \item Scan Policy: Default Active Scan Policy
+ 807:   \item The active scan sent thousands of crafted HTTP requests, probing for injection
+ 808:     vulnerabilities, authentication flaws, and misconfigurations.
+ 809: \end{itemize}
+ 810: 
+ 811: \screenshot{Insert screenshot of the Active Scan progress bar and status in ZAP,
+ 812: showing scan running or completed against \texttt{http://localhost:3000}.}
+ 813: 
+ 814: % ----
+ 815: \subsection{Findings}
+ 816: 
+ 817: The automated scan produced the following security findings. The complete Alerts list in
+ 818: ZAP is shown in Figure~\ref{fig:alerts}.
+ 819: 
+ 820: \screenshot{Insert screenshot of the ZAP Alerts tab showing the full list of alerts,
+ 821: colour-coded by risk level (red for High, orange for Medium, yellow for Low).
+ 822: \label{fig:alerts}}
+ 823: 
+ 824: \subsubsection*{Finding 1 --- SQL Injection [HIGH RISK]}
+ 825: 
+ 826: \begin{tcolorbox}[warnbox, title={\textcolor{highred}{\textbf{HIGH RISK:}} SQL Injection}]
+ 827: \begin{tabular}{@{}ll@{}}
+ 828: \textbf{Risk Level:}   & \textcolor{highred}{\textbf{High}} \\
+ 829: \textbf{CWE:}          & CWE-89 --- Improper Neutralisation of SQL Commands \\
+ 830: \textbf{OWASP 2021:}   & A03:2021 --- Injection \\
+ 831: \textbf{Affected URL:} & \texttt{POST http://localhost:3000/rest/user/login} \\
+ 832: \textbf{Parameter:}    & \texttt{email} \\
+ 833: \textbf{Evidence:}     & ZAP injected payload \texttt{' OR '1'='1} causing
+ 834:                          authentication bypass \\
+ 835: \end{tabular}
+ 836: \end{tcolorbox}
+ 837: 
+ 838: \textbf{Vulnerability Type.}
+ 839: SQL Injection (SQLi) occurs when untrusted user-supplied input is incorporated directly
+ 840: into a database query without adequate sanitisation or parameterisation. An attacker can
+ 841: manipulate the query logic to bypass authentication, extract arbitrary data, modify records,
+ 842: or in some configurations, execute operating system commands \citep{owasp2021top10}.
+ 843: 
+ 844: \textbf{Risk Impact.}
+ 845: In the context of Juice Shop, the \texttt{/rest/user/login} endpoint passes the submitted
+ 846: \texttt{email} value directly into a SQL query (Sequelize with raw input interpolation),
+ 847: enabling complete authentication bypass with the payload \texttt{' OR '1'='1'--}. In a
+ 848: production payment platform such as PayWave, an equivalent flaw would enable:
+ 849: \begin{itemize}
+ 850:   \item Unauthorised access to any customer account without a valid password.
+ 851:   \item Extraction of the entire \texttt{users} table including password hashes and PII.
+ 852:   \item Potential for UNION-based extraction of payment card data, violating PCI DSS
+ 853:     requirements.
+ 854:   \item Complete loss of confidentiality of all stored customer and transaction data.
+ 855: \end{itemize}
+ 856: The CVSS v3.1 base score for a critical SQL injection with authentication bypass is
+ 857: typically \textbf{9.8 (Critical)}.
+ 858: 
+ 859: \screenshot{Insert screenshot of the ZAP Alert detail panel for SQL Injection, showing the
+ 860: Alert name, Risk: High, URL, Parameter, Evidence (the injected payload and response
+ 861: difference), and Solution fields.}
+ 862: 
+ 863: \screenshot{Insert screenshot of the Juice Shop login page in the browser with ZAP's
+ 864: HTTP History pane visible, showing the SQL injection request and the 200 OK response
+ 865: (authentication bypass confirmed).}
+ 866: 
+ 867: \textbf{Mitigation Strategy.}
+ 868: \begin{itemize}
+ 869:   \item \textbf{Parameterised queries / prepared statements}: Replace all dynamic SQL
+ 870:     string concatenation with parameterised queries using the ORM's bound-parameter API
+ 871:     (e.g., Sequelize \texttt{where: \{ email: req.body.email \}} rather than raw SQL).
+ 872:   \item \textbf{Input validation}: Validate and sanitise all user inputs at the
+ 873:     application boundary; reject inputs containing SQL metacharacters (\texttt{' -- ;}).
+ 874:   \item \textbf{Principle of least privilege}: The database user account used by the
+ 875:     application should have minimal permissions (SELECT/INSERT/UPDATE only; no DROP or
+ 876:     administrative functions).
+ 877:   \item \textbf{Web Application Firewall (WAF)}: Deploy AWS WAF with SQL injection
+ 878:     detection rules as a defence-in-depth layer.
+ 879:   \item \textbf{SAST enforcement}: Enforce SAST rules (Semgrep \texttt{sql-injection}
+ 880:     ruleset) in the CI pipeline to prevent injection-prone code patterns from merging.
+ 881: \end{itemize}
+ 882: 
+ 883: % ----
+ 884: 
+ 885: \subsubsection*{Finding 2 --- Content Security Policy (CSP) Header Not Set [MEDIUM RISK]}
+ 886: 
+ 887: \begin{tcolorbox}[secbox, title={\textcolor{medorange}{\textbf{MEDIUM RISK:}}
+ 888: Content Security Policy (CSP) Header Not Set}]
+ 889: \begin{tabular}{@{}ll@{}}
+ 890: \textbf{Risk Level:}   & \textcolor{medorange}{\textbf{Medium}} \\
+ 891: \textbf{CWE:}          & CWE-693 --- Protection Mechanism Failure \\
+ 892: \textbf{OWASP 2021:}   & A05:2021 --- Security Misconfiguration \\
+ 893: \textbf{Affected URL:} & \texttt{GET http://localhost:3000/} (and all pages) \\
+ 894: \textbf{Evidence:}     & \texttt{Content-Security-Policy} response header absent \\
+ 895: \end{tabular}
+ 896: \end{tcolorbox}
+ 897: 
+ 898: \textbf{Vulnerability Type.}
+ 899: The \texttt{Content-Security-Policy} (CSP) HTTP response header instructs browsers which
+ 900: sources of scripts, styles, frames, and other resources are trusted for a given page. When
+ 901: absent, browsers operate in their default permissive mode, permitting execution of
+ 902: injected scripts from any origin \citep{owasp2021top10}.
+ 903: 
+ 904: \textbf{Risk Impact.}
+ 905: Without a CSP header:
+ 906: \begin{itemize}
+ 907:   \item Reflected and Stored XSS attacks can execute arbitrary JavaScript in victims'
+ 908:     browsers, enabling session token theft, credential harvesting, and DOM manipulation.
+ 909:   \item Malicious third-party scripts injected via supply chain compromise (e.g., a
+ 910:     compromised npm CDN package) will execute unchallenged.
+ 911:   \item Clickjacking attacks via \texttt{<iframe>} embedding remain possible.
+ 912:   \item In a payment context such as PayWave, XSS combined with an absent CSP could
+ 913:     enable attackers to silently redirect payment flows to attacker-controlled endpoints.
+ 914: \end{itemize}
+ 915: 
+ 916: \screenshot{Insert screenshot of the ZAP Alert detail for ``Content Security Policy (CSP)
+ 917: Header Not Set'', showing Risk: Medium, URL, and the response headers section confirming
+ 918: the absence of the Content-Security-Policy header.}
+ 919: 
+ 920: \textbf{Mitigation Strategy.}
+ 921: \begin{itemize}
+ 922:   \item Add a \texttt{Content-Security-Policy} header to all HTTP responses, beginning
+ 923:     with a restrictive policy such as:
+ 924: \begin{lstlisting}
+ 925: Content-Security-Policy: default-src 'self';
+ 926:   script-src 'self' https://trusted-cdn.com;
+ 927:   object-src 'none'; frame-ancestors 'none';
+ 928: \end{lstlisting}
+ 929:   \item Use \texttt{Content-Security-Policy-Report-Only} initially to audit policy
+ 930:     effectiveness before enforcement.
+ 931:   \item Combine with \texttt{X-Frame-Options: DENY} and
+ 932:     \texttt{X-Content-Type-Options: nosniff} for defence-in-depth.
+ 933:   \item Enforce CSP header presence in automated pipeline testing (ZAP passive scan rules).
+ 934: \end{itemize}
+ 935: 
+ 936: % ----
+ 937: 
+ 938: \subsubsection*{Finding 3 --- Missing Anti-CSRF Tokens [MEDIUM RISK]}
+ 939: 
+ 940: \begin{tcolorbox}[secbox, title={\textcolor{medorange}{\textbf{MEDIUM RISK:}}
+ 941: Absence of Anti-CSRF Tokens}]
+ 942: \begin{tabular}{@{}ll@{}}
+ 943: \textbf{Risk Level:}   & \textcolor{medorange}{\textbf{Medium}} \\
+ 944: \textbf{CWE:}          & CWE-352 --- Cross-Site Request Forgery (CSRF) \\
+ 945: \textbf{OWASP 2021:}   & A01:2021 --- Broken Access Control \\
+ 946: \textbf{Affected URL:} & \texttt{POST http://localhost:3000/api/Users/} \\
+ 947: \textbf{Evidence:}     & No CSRF token in form submission or request headers \\
+ 948: \end{tabular}
+ 949: \end{tcolorbox}
+ 950: 
+ 951: \textbf{Vulnerability Type.}
+ 952: CSRF attacks trick authenticated users into unknowingly submitting state-changing requests
+ 953: to an application in which they are authenticated. Without CSRF tokens, the application
+ 954: cannot distinguish between legitimate requests initiated by the user and forged requests
+ 955: originating from a malicious third-party website.
+ 956: 
+ 957: \textbf{Risk Impact.}
+ 958: \begin{itemize}
+ 959:   \item An attacker hosting a malicious web page could cause an authenticated Juice Shop
+ 960:     user (or PayWave customer) to unknowingly submit account modification requests,
+ 961:     change their email or password, or initiate transfers.
+ 962:   \item In a payment platform context, CSRF could be used to silently initiate
+ 963:     fraudulent peer-to-peer transfers from a victim's authenticated session.
+ 964:   \item The attack requires no credential theft; it exploits the browser's automatic
+ 965:     inclusion of session cookies on cross-origin requests.
+ 966: \end{itemize}
+ 967: 
+ 968: \screenshot{Insert screenshot of the ZAP Alert detail for ``Absence of Anti-CSRF Tokens'',
+ 969: showing Risk: Medium, the affected POST endpoint, and evidence of missing CSRF token
+ 970: in the request.}
+ 971: 
+ 972: \textbf{Mitigation Strategy.}
+ 973: \begin{itemize}
+ 974:   \item Implement the \textbf{Synchroniser Token Pattern}: generate a unique, unpredictable
+ 975:     CSRF token per session, embed it as a hidden field in every state-changing form and
+ 976:     validate it server-side.
+ 977:   \item Use the \textbf{SameSite cookie attribute} (\texttt{SameSite=Strict} or
+ 978:     \texttt{SameSite=Lax}) on session cookies to prevent cross-origin request forgery.
+ 979:   \item Validate the \texttt{Origin} and \texttt{Referer} headers as secondary
+ 980:     defence-in-depth measures.
+ 981:   \item For REST APIs, use custom request headers (e.g., \texttt{X-Requested-With}) as
+ 982:     an additional CSRF defence for AJAX-based interactions.
+ 983: \end{itemize}
+ 984: 
+ 985: % ----
+ 986: \subsection{Risk Analysis Summary}
+ 987: 
+ 988: \begin{center}
+ 989: \renewcommand{\arraystretch}{1.4}
+ 990: \begin{tabularx}{\textwidth}{lXllX}
+ 991: \toprule
+ 992: \textbf{\#} & \textbf{Vulnerability} & \textbf{Risk} & \textbf{CVSS} & \textbf{Primary Impact} \\
+ 993: \midrule
+ 994: 1 & SQL Injection & \textcolor{highred}{\textbf{High}} & 9.8 &
+ 995:   Authentication bypass; full database exfiltration \\
+ 996: 2 & CSP Header Not Set & \textcolor{medorange}{\textbf{Medium}} & 6.1 &
+ 997:   Enables XSS, clickjacking, script injection \\
+ 998: 3 & Missing Anti-CSRF Tokens & \textcolor{medorange}{\textbf{Medium}} & 6.5 &
+ 999:   Unauthorised state-changing requests by authenticated users \\
+1000: \bottomrule
+1001: \end{tabularx}
+1002: \renewcommand{\arraystretch}{1}
+1003: \end{center}
+1004: 
+1005: % ----
+1006: \subsection{Mitigation Recommendations Summary}
+1007: 
+1008: \begin{enumerate}
+1009:   \item \textbf{Immediate (Critical):} Replace all raw SQL string interpolation with
+1010:     parameterised ORM queries. Apply input validation on all user-facing endpoints.
+1011:     Deploy WAF rules to detect and block SQL injection patterns. Re-test with ZAP after
+1012:     remediation.
+1013: 
+1014:   \item \textbf{Short-term (High Priority):} Configure \texttt{Content-Security-Policy},
+1015:     \texttt{X-Frame-Options}, and \texttt{X-Content-Type-Options} headers in the
+1016:     application's HTTP middleware. Validate header presence with ZAP passive scan in the
+1017:     CI pipeline.
+1018: 
+1019:   \item \textbf{Short-term:} Implement CSRF token generation and validation for all
+1020:     state-changing endpoints. Set \texttt{SameSite=Strict} on all session cookies.
+1021: 
+1022:   \item \textbf{Ongoing:} Integrate ZAP Baseline Scan into the GitHub Actions pipeline
+1023:     to catch regressions on every PR. Schedule full Active Scans weekly against staging.
+1024: \end{enumerate}
+1025: 
+1026: % ----
+1027: \subsection{Reflection on DAST Effectiveness}
+1028: 
+1029: This exercise demonstrates both the power and the limitations of DAST as a DevSecOps
+1030: control. DAST is highly effective at identifying categories of vulnerability that manifest
+1031: at runtime --- SQL injection, missing security headers, authentication weaknesses, and
+1032: insecure cookie configurations. It requires no access to source code, making it applicable
+1033: to third-party and legacy systems, and it tests the application in its actual deployed
+1034: state rather than a static representation of the code.
+1035: 
+1036: However, DAST has meaningful limitations. Automated tools struggle with complex
+1037: authentication flows, multi-step business logic attacks, and second-order injection
+1038: vulnerabilities. The active scan may not achieve full coverage of a Single Page Application
+1039: (SPA) due to the AJAX-heavy nature of many modern front-ends, and finding generation can
+1040: include false positives that require manual verification. DAST is most effective when
+1041: combined with SAST (which identifies source-level vulnerabilities earlier), SCA (which
+1042: catches dependency risks), and manual penetration testing (which covers business logic and
+1043: advanced attack chains) \citep{shahin2017}. Within a mature DevSecOps pipeline, ZAP in
+1044: Baseline mode provides a rapid, lightweight gate appropriate for every PR, while a full
+1045: Active Scan is appropriate for pre-release staging validation.
+1046: 
+1047: \newpage
+1048: 
+1049: % ============================================================
+1050: % QUESTION 5 — Supply Chain Security & Dependabot (10 marks)

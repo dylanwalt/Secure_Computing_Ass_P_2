@@ -1,0 +1,22 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.lof
+*.lot
+*.idx
+*.ilg
+*.ind
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Local submission bundle (keep out of repo)
+deliverables.zip

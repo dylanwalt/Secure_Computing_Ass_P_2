@@ -1,0 +1,156 @@
+Assignment 2 – Part 2
+
+ 
+Question 1 — Advanced Conceptual Analysis (20 Marks)
+DevSecOps Critical Evaluation
+
+Modern organisations increasingly adopt DevSecOps to accelerate software delivery while improving security posture. However, many organizations still experience major security incidents despite implementing CI/CD pipelines and automated tooling.
+Required:
+
+Critically evaluate the effectiveness of DevSecOps in reducing modern application security risks.
+
+Your discussion must include:
+
+    The role of Shift Left Security
+    Why automation alone is insufficient
+    The importance of organisational culture in DevSecOps
+    Challenges associated with false positives and tool overload
+    The impact of vulnerable open-source dependencies on modern software systems
+    Why continuous monitoring remains necessary after deployment
+
+Instructions:
+
+    Use real-world examples where applicable
+    Reference academic literature
+    Maximum: 1200 words
+
+ 
+Question 2 — Scenario-Based Design Question (30 Marks)
+
+A Johannesburg-based FinTech startup called PayWave Digital is preparing to launch a cloud-native digital payments platform aimed at supporting mobile banking services, QR-code merchant payments, and peer-to-peer transfers across Southern Africa. The platform is expected to integrate with several third-party financial institutions and retail partners through publicly exposed REST APIs. In addition to customer-facing mobile applications, the system also provides APIs for internal analytics dashboards used by the company’s fraud detection and business intelligence teams.
+
+To support rapid feature delivery and scalability, the development team adopted a microservices architecture deployed using Docker containers within an AWS cloud environment. The engineering team currently uses GitHub Actions to automate CI/CD processes, enabling developers to push updates into staging environments multiple times per day. Due to tight development deadlines and startup budget constraints, developers rely heavily on open-source libraries and publicly available packages for authentication, logging, payment processing, and API management functionality.
+
+Recently, during an investor due-diligence review, concerns were raised regarding the security posture of the platform. Specifically, auditors identified risks related to vulnerable third-party dependencies, inconsistent secrets management practices, insufficient runtime monitoring, and the absence of automated application security testing within the CI/CD pipeline. One developer was also found to have accidentally committed test API credentials into a private GitHub repository during development.
+
+As the newly appointed DevSecOps consultant, you have been tasked with designing a secure DevSecOps pipeline for PayWave Digital before the platform enters production and begins processing live customer financial transactions.
+
+As part of your response, you are required to draw a high-level DevSecOps pipeline diagram illustrating the major phases of the software delivery lifecycle, namely: Plan, Code, Build, Test, Release, Deploy, and Monitor. Your diagram must clearly demonstrate where key security controls and DevSecOps practices would be integrated throughout the pipeline. Specifically, you should indicate where Static Application Security Testing (SAST), Software Composition Analysis (SCA), Dynamic Application Security Testing (DAST), secrets management mechanisms, and continuous runtime monitoring would be implemented within the CI/CD workflow. Your diagram should also reflect how security is embedded continuously across the development and deployment process rather than being applied only at the end of the lifecycle.
+
+ 
+Mark Allocation:
+
+    Technical correctness: 15
+    Security reasoning: 10
+    Diagram quality: 5
+
+ 
+
+ 
+Question 3 — Threat Modelling & STRIDE (15 Marks)
+
+An organisation is deploying a healthcare API platform that stores patient medical records in a cloud-native environment.
+Required:
+
+Using the STRIDE threat modelling framework:
+
+    Identify one realistic threat for each STRIDE category
+    Explain how each threat could impact confidentiality, integrity, or availability
+    Recommend one mitigation strategy per threat
+
+Additional Requirement:
+
+Explain why threat modelling should occur before deployment rather than after penetration testing.
+
+ 
+
+ 
+Question 4 — Practical DevSecOps Lab: OWASP ZAP (25 Marks)
+Vulnerability Assessment Practical
+
+In this practical exercise, you are required to perform Dynamic Application Security Testing (DAST) using OWASP ZAPagainst a deliberately vulnerable web application. The objective of this assessment is to provide hands-on experience with automated web application security testing, vulnerability discovery, and security analysis within a DevSecOps context.
+
+You must begin by downloading and installing the free community edition of OWASP ZAP from the official website such as the one below:
+
+    https://www.zaproxy.org/download/ Links to an external site.
+
+After installing OWASP ZAP, you must set up an intentionally vulnerable web application that will serve as the target for security testing. Students may use one of the following vulnerable applications:
+
+    OWASP Juice Shop (recommended)
+    DVWA (Damn Vulnerable Web Application)
+    WebGoat
+    Mutillidae II
+
+The recommended application for this practical is OWASP Juice Shop, which can be downloaded from:
+
+    https://github.com/juice-shop/juice-shop Links to an external site.
+
+Alternatively, students may run the application using Docker with the following command:
+
+docker run -d -p 3000:3000 bkimminich/juice-shop
+
+Once deployed, the application can be accessed through:
+
+http://localhost:3000 Links to an external site.
+
+Using OWASP ZAP, students are required to configure the tool as an intercepting proxy and perform security testing against the vulnerable application. The assessment must include:
+
+    crawling/spidering the application,
+    performing an automated vulnerability
+    capturing screenshots of findings
+
+Identify at least:
+
+    2 medium-risk vulnerabilities
+    1 high-risk vulnerability
+
+ 
+
+Explain:
+
+    vulnerability type,
+    risk impact,
+    and mitigation strategy
+
+ 
+
+Report Requirements
+
+    Students must submit PDF report with:
+    Screenshots
+    Vulnerability analysis
+    Reflection on DAST effectiveness
+    Suggested Structure:
+    Introduction
+    Environment Setup
+    Scan Configuration
+    Findings
+    Risk Analysis
+    Mitigation Recommendations
+    Conclusion
+
+ 
+Question 5 — Software Supply Chain Security & Dependabot (10 Marks)
+
+Modern software applications rely heavily on open-source libraries and third-party dependencies. While these components accelerate development, they can also introduce security vulnerabilities into applications if they are outdated or poorly maintained. Tools such as GitHub Dependabot help organisations identify vulnerable dependencies and recommend security updates as part of a DevSecOps strategy.
+
+Using your understanding of Software Composition Analysis (SCA) and DevSecOps principles, explain the role of GitHub Dependabot in improving software supply chain security.
+
+In your answer, discuss:
+
+    what vulnerable dependencies are,
+    why dependency management is important,
+    how Dependabot alerts are enabled in a public Github repository (provide screenshots), and how they help developers identify security risks,
+    and how SCA tools contribute to secure CI/CD pipelines.
+
+You may include screenshots or examples from GitHub documentation or online resources to support your explanation.
+Deliverables (zipped file):
+
+    GitHub repository link
+    Screenshots
+    Short explanation of:
+        why dependency management matters,
+        and how SCA tools improve DevSecOps security
+
+ 
+
