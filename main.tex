@@ -129,6 +129,7 @@
 
 % ---- Page style ----
 \pagestyle{fancy}
+\setlength{\headheight}{14pt}
 \fancyhf{}
 \lhead{\small\textit{Secure Computing --- Assignment 2, Part 2}}
 \rhead{\small\textit{DevSecOps \& Application Security}}
@@ -280,11 +281,10 @@ overlapping security tools simultaneously --- SAST, DAST, Software Composition A
 (SCA), container image scanning, infrastructure-as-code scanning, and secret detection ---
 without centralised orchestration. The resulting fragmented security landscape makes
 triaging, prioritising, and tracking vulnerabilities operationally unmanageable, leading to
-security debt accumulation rather than reduction. Platforms such as DefectDojo and Jira
-Security Integration provide consolidated dashboards, but without deliberate tool
-rationalisation, clearly defined remediation SLAs, and executive accountability, DevSecOps
-tooling can paradoxically increase organisational risk by obscuring actionable intelligence
-beneath a volume of low-confidence noise.
+security debt accumulation rather than reduction. Platforms such as DefectDojo can
+consolidate findings, but organisations still need deliberate tool rationalisation, clear
+remediation SLAs, and executive accountability; otherwise low-confidence alerts obscure
+actionable risk.
 
 \subsection*{The Impact of Vulnerable Open-Source Dependencies}
 
@@ -325,19 +325,16 @@ upstream into backlog prioritisation and threat model updates.
 
 \subsection*{Conclusion}
 
-DevSecOps offers a compelling and necessary framework for embedding security throughout the
-software delivery lifecycle, but its effectiveness is conditional on the convergence of
-cultural transformation, intelligent automation, and continuous operational oversight.
-Organisations that treat DevSecOps as a tooling procurement exercise rather than a holistic
-security programme remain vulnerable to the same classes of attack that predated its
-adoption. Achieving sustained, meaningful security improvement requires addressing the
-human, cultural, and architectural dimensions of security alongside the technical,
-recognising that security is not a feature to be delivered but a property to be
-continuously earned, maintained, and verified.
+DevSecOps can materially reduce application security risk by embedding security controls
+throughout the software delivery lifecycle, but only when supported by cultural change,
+informed human review, and continuous monitoring. Treating DevSecOps as a tooling
+procurement exercise leaves organisations exposed; sustained improvement requires
+accountable ownership, prioritised remediation, and feedback loops that keep pace with
+evolving threats.
 
 \vspace{0.5em}
 \begin{notebox}
-\textit{Approximate word count: 1\,180 words}
+\textit{Approximate word count: 1\,100 words}
 \end{notebox}
 
 \newpage
@@ -1156,6 +1153,14 @@ catches dependency risks), and manual penetration testing (which covers business
 advanced attack chains) \citep{shahin2017}. Within a mature DevSecOps pipeline, ZAP in
 Baseline mode provides a rapid, lightweight gate appropriate for every PR, while a full
 Active Scan is appropriate for pre-release staging validation.
+
+\subsection{Conclusion}
+
+In conclusion, OWASP ZAP proved effective at rapidly identifying impactful runtime
+vulnerabilities (including a High-risk SQL injection) and security misconfigurations (CSP
+and CORS) in a realistic web application. To maximise risk reduction, ZAP should be
+integrated into CI/CD as an automated DAST control and paired with complementary controls
+such as SAST, SCA, and ongoing monitoring to provide defence in depth.
 
 \newpage
 
