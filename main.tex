@@ -112,7 +112,8 @@
 \captionsetup{font=small, labelfont=bf}
 
 % ---- Landscape pages ----
-\usepackage{lscape}
+% Rotate landscape pages in the PDF output so they are readable without manual rotation.
+\usepackage[pdftex]{lscape}
 
 % ---- Bibliography ----
 \usepackage[authoryear,round,sort&compress]{natbib}
@@ -427,7 +428,8 @@ security controls.
 \begin{landscape}
 \begin{figure}[H]
   \centering
-  \resizebox{1.0\linewidth}{!}{%
+  % In a landscape page, \linewidth is widened to the page's long edge.
+  \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[
     node distance=0.15cm and 0.15cm,
     phase/.style={
@@ -476,26 +478,26 @@ security controls.
 
   % ---- PLAN controls ----
   \node[ctrl=cplan, below=0.35cm of PLAN]  (p1) {Threat Modelling\\(STRIDE/PASTA)};
-  \node[ctrl=cplan, below=0.1cm of p1]     (p2) {Security Requirements};
+  \node[ctrl=cplan, below=0.1cm of p1]     (p2) {Security\\Requirements};
   \node[ctrl=cplan, below=0.1cm of p2]     (p3) {Risk Assessment};
 
   % ---- CODE controls ----
   \node[ctrl=ccode, below=0.35cm of CODE]  (c1) {SAST (Semgrep /\\SonarQube)};
-  \node[ctrl=ccode, below=0.1cm of c1]     (c2) {Secret Detection\\(GitLeaks / truffleHog)};
+  \node[ctrl=ccode, below=0.1cm of c1]     (c2) {Secret Detection\\(GitLeaks /\\truffleHog)};
   \node[ctrl=ccode, below=0.1cm of c2]     (c3) {Pre-commit Hooks\\+ IDE Linting};
 
   % ---- BUILD controls ----
   \node[ctrl=cbuild, below=0.35cm of BUILD] (b1) {SCA (Snyk /\\OWASP Dep-Check)};
-  \node[ctrl=cbuild, below=0.1cm of b1]     (b2) {Container Scanning\\(Trivy)};
+  \node[ctrl=cbuild, below=0.1cm of b1]     (b2) {Container\\Scanning\\(Trivy)};
   \node[ctrl=cbuild, below=0.1cm of b2]     (b3) {SBOM Generation\\(Syft)};
 
   % ---- TEST controls ----
   \node[ctrl=ctest, below=0.35cm of TEST]  (t1) {DAST (OWASP ZAP)};
-  \node[ctrl=ctest, below=0.1cm of t1]     (t2) {API Security Testing\\(Postman / 42Crunch)};
-  \node[ctrl=ctest, below=0.1cm of t2]     (t3) {Penetration Testing\\(Manual / Burp Suite)};
+  \node[ctrl=ctest, below=0.1cm of t1]     (t2) {API Security Testing\\(Postman /\\42Crunch)};
+  \node[ctrl=ctest, below=0.1cm of t2]     (t3) {Penetration Testing\\(Manual /\\Burp Suite)};
 
   % ---- RELEASE controls ----
-  \node[ctrl=crelease, below=0.35cm of RELEASE] (r1) {Security Quality\\Gates (no Crit/High)};
+  \node[ctrl=crelease, below=0.35cm of RELEASE] (r1) {Security Quality\\Gates (no\\Crit/High)};
   \node[ctrl=crelease, below=0.1cm of r1]       (r2) {Artefact Signing\\(cosign / Sigstore)};
   \node[ctrl=crelease, below=0.1cm of r2]       (r3) {Compliance\\Validation (PCI DSS)};
 
@@ -505,7 +507,7 @@ security controls.
   \node[ctrl=cdeploy, below=0.1cm of d2]      (d3) {RBAC / Least\\Privilege IAM};
 
   % ---- MONITOR controls ----
-  \node[ctrl=cmonitor, below=0.35cm of MONITOR] (m1) {SIEM / GuardDuty\\/ CloudWatch};
+  \node[ctrl=cmonitor, below=0.35cm of MONITOR] (m1) {SIEM / GuardDuty\\CloudWatch};
   \node[ctrl=cmonitor, below=0.1cm of m1]       (m2) {Runtime Security\\(Falco)};
   \node[ctrl=cmonitor, below=0.1cm of m2]       (m3) {Incident Response\\Runbooks};
 
