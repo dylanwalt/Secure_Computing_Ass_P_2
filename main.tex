@@ -472,14 +472,14 @@ security controls.
   \draw[phasearr] (RELEASE.east) -- (DEPLOY.west);
   \draw[phasearr] (DEPLOY.east)  -- (MONITOR.west);
 
-  % ---- Security section label ----
-  \node[font=\small\bfseries\color{gray!65}, rotate=90,
-        left=0.7cm of PLAN, yshift=-2.1cm] {SECURITY CONTROLS};
-
   % ---- PLAN controls ----
   \node[ctrl=cplan, below=0.35cm of PLAN]  (p1) {Threat Modelling\\(STRIDE/PASTA)};
   \node[ctrl=cplan, below=0.1cm of p1]     (p2) {Security\\Requirements};
   \node[ctrl=cplan, below=0.1cm of p2]     (p3) {Risk Assessment};
+
+  % ---- Security section label (moved left to avoid overlap) ----
+  \node[font=\scriptsize\bfseries\color{gray!60}, rotate=90,
+        left=1.15cm of p2] {SECURITY CONTROLS};
 
   % ---- CODE controls ----
   \node[ctrl=ccode, below=0.35cm of CODE]  (c1) {SAST (Semgrep /\\SonarQube)};
@@ -516,16 +516,21 @@ security controls.
     \draw[gray!40, dashed, thin] (\ph.south) -- (\ct.north);
   }
 
-  % ---- Continuous Feedback Loop ----
-  \draw[feedarr]
-    (MONITOR.south)
-    -- ++(0,-0.7) coordinate (br)
-    -- (br -| PLAN.south) coordinate (bl)
-    -- (PLAN.south);
+  % ---- Continuous Feedback Loop (routed below controls to avoid overlap) ----
+  \coordinate (loopY)  at ($(current bounding box.south) + (0,-0.45)$);
+  \coordinate (loopBR) at (loopY -| m3.south);
+  \coordinate (loopBL) at (loopY -| p3.south);
 
-  \node[font=\footnotesize\bfseries\color{red!65!black}]
-    at ($(br)!0.5!(bl) + (0,-0.35)$)
-    {$\longleftarrow$\quad Continuous Security Feedback Loop \quad$\longleftarrow$};
+  \draw[feedarr]
+    (m3.south) -- (loopBR)
+    -- node[
+        midway,
+        above=2pt,
+        font=\footnotesize\bfseries\color{red!65!black},
+        fill=white, fill opacity=0.92, text opacity=1,
+        rounded corners=2pt, inner sep=2.5pt
+      ] {Continuous Security Feedback Loop} (loopBL)
+    -- (p3.south);
 
   % ---- "Shift Left" annotation ----
   \node[font=\small\bfseries\color{phaseblue}, above=0.5cm of CODE,
