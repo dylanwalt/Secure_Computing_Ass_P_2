@@ -175,6 +175,8 @@
    Vulnerability Assessment \& Supply Chain Security}\\[3cm]
 
   \begin{tabular}{@{}ll@{}}
+    \textbf{Student:}     & Dylan Walt \\[0.4em]
+    \textbf{Student No.:} & 2726341 \\[0.4em]
     \textbf{Module:}      & Secure Computing \\[0.4em]
     \textbf{Assessment:}  & Assignment 2 --- Part 2 \\[0.4em]
     \textbf{Year Level:}  & Fourth Year, Semester 1 \\[0.4em]
@@ -321,7 +323,12 @@ as a fundamental governance requirement, emphasising that threat landscapes evol
 independently of the software delivery cycle. Effective DevSecOps programmes treat
 continuous monitoring as an integral pipeline stage, with defined alerting thresholds,
 automated incident response runbooks, and feedback loops that propagate production findings
-upstream into backlog prioritisation and threat model updates.
+upstream into backlog prioritisation and threat model updates. Quantitatively,
+\citet{forsgren2018} found that elite software delivery organisations restore service from
+failures 2,604 times faster than low-performing counterparts --- an outcome achievable only
+through comprehensive observability and rapid-response monitoring. This underscores that
+continuous monitoring is not merely a reactive security control but a strategic organisational
+capability that enables evidence-based improvement and informed risk governance.
 
 \subsection*{Conclusion}
 
@@ -334,7 +341,7 @@ evolving threats.
 
 \vspace{0.5em}
 \begin{notebox}
-\textit{Approximate word count: 1\,100 words}
+\textit{Approximate word count: 1\,165 words}
 \end{notebox}
 
 \newpage
@@ -379,6 +386,37 @@ risks is essential:
     scanning may run with known OS-level or library-level vulnerabilities. Infrastructure-
     as-code misconfigurations can expose internal services to the public internet.
 \end{enumerate}
+
+Table~\ref{tab:risk-control} maps each identified risk to the specific pipeline phase and
+security control that addresses it, demonstrating how the proposed pipeline directly
+mitigates the concerns raised during due diligence.
+
+\begin{table}[H]
+\centering
+\caption{PayWave Due-Diligence Risks Mapped to Pipeline Controls}
+\label{tab:risk-control}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{>{\bfseries}p{4.2cm} p{3cm} X}
+\toprule
+\textbf{Risk Identified} & \textbf{Pipeline Phase} & \textbf{Security Control} \\
+\midrule
+\rowcolor{lightgray}
+Vulnerable OSS dependencies & Build &
+  SCA: Snyk / OWASP Dependency-Check; build fails on CVSS $\geq 7$ \\
+Secrets committed to GitHub & Code &
+  Pre-commit hooks: GitLeaks / truffleHog detect secrets before push \\
+\rowcolor{lightgray}
+No automated security testing & Code / Build / Test &
+  SAST (Semgrep), SCA (Snyk), DAST (OWASP ZAP) integrated into pipeline \\
+Insufficient runtime monitoring & Monitor &
+  AWS GuardDuty, Falco, CloudWatch with automated PagerDuty alerting \\
+\rowcolor{lightgray}
+Container \& IaC misconfigurations & Build / Deploy &
+  Container scanning (Trivy), IaC scanning (Checkov / tfsec) \\
+\bottomrule
+\end{tabularx}
+\renewcommand{\arraystretch}{1}
+\end{table}
 
 \subsection{DevSecOps Pipeline Diagram}
 
@@ -506,8 +544,8 @@ security controls.
 Every feature sprint begins with a structured threat modelling session using the STRIDE
 framework to enumerate threats applicable to PayWave's payment APIs and microservice
 interactions. Security requirements derived from threat models, PCI DSS obligations
-\citep{pciDSS2022}, and the OWASP ASVS are documented as acceptance criteria in Jira
-tickets, ensuring that security is a first-class functional requirement rather than an
+\citep{pciDSS2022}, and the OWASP ASVS \citep{owaspasvs} are documented as acceptance
+criteria in Jira tickets, ensuring that security is a first-class functional requirement rather than an
 afterthought.
 
 \subsubsection*{Phase 2 — Code}
@@ -609,7 +647,7 @@ An attacker obtains a stolen OAuth 2.0 access token via phishing and replays it 
 authenticate as a legitimate clinician, accessing the patient records API without
 authorisation. &
 \textbf{Confidentiality:} Unauthorised access to protected health information (PHI) violates POPIA
-and HIPAA, risking regulatory sanction and patient harm. &
+\citep{popia2013} and HIPAA, risking regulatory sanction and patient harm. &
 Implement short-lived JWT tokens (15-min expiry) with rotating refresh tokens; enforce
 multi-factor authentication (MFA) for all API access; deploy token revocation lists and
 anomalous usage detection. \\
@@ -645,7 +683,7 @@ An authenticated low-privilege patient portal user exploits an Insecure Direct O
 Reference (IDOR) vulnerability by incrementing record IDs in API requests, successfully
 retrieving other patients' complete medical histories. &
 \textbf{Confidentiality:} Mass exposure of third-party PHI constitutes a notifiable data
-breach under POPIA Section 22, incurring regulatory penalties and reputational damage. &
+breach under POPIA Section~22 \citep{popia2013}, incurring regulatory penalties and reputational damage. &
 Enforce object-level authorisation on every API endpoint; implement Attribute-Based Access
 Control (ABAC) ensuring records are accessible only to their owning patient or authorised
 clinicians; conduct IDOR-specific security testing. \\
@@ -812,6 +850,13 @@ The Traditional Spider was launched against \texttt{http://localhost:3000}:
   \caption{Traditional spider results showing discovered URLs and endpoints.}
   \label{fig:zap-spider}
 \end{figure}
+
+\textbf{Note on AJAX Spider.}
+Because Juice Shop is an Angular-based Single Page Application (SPA), OWASP ZAP's
+\textit{AJAX Spider} is available as a complement to the Traditional Spider. The AJAX
+Spider executes JavaScript, follows client-side routes, and interacts with dynamic content,
+providing deeper coverage of modern SPA architectures. Combined use of both spiders is
+recommended for production-grade assessments against JavaScript-heavy applications.
 
 \subsubsection*{Active Scan}
 
@@ -1097,13 +1142,13 @@ minimum counts:
 \midrule
 1 & SQL Injection & \textcolor{highred}{\textbf{High}} & 9.8 &
   Database compromise; unauthorised data access \\
-2 & CSP Header Not Set & \textcolor{medorange}{\textbf{Medium}} & -- &
+2 & CSP Header Not Set & \textcolor{medorange}{\textbf{Medium}} & 6.1 &
   Increased XSS/clickjacking exposure due to missing browser policy \\
-3 & CSP Directive Missing Fallback & \textcolor{medorange}{\textbf{Medium}} & -- &
+3 & CSP Directive Missing Fallback & \textcolor{medorange}{\textbf{Medium}} & 5.3 &
   Weak framing controls and reduced defence-in-depth \\
-4 & Cross-Domain Misconfiguration (CORS) & \textcolor{medorange}{\textbf{Medium}} & -- &
+4 & Cross-Domain Misconfiguration (CORS) & \textcolor{medorange}{\textbf{Medium}} & 6.5 &
   Cross-origin data exposure risk if applied to sensitive endpoints \\
-5 & Session ID in URL Rewrite & \textcolor{medorange}{\textbf{Medium}} & -- &
+5 & Session ID in URL Rewrite & \textcolor{medorange}{\textbf{Medium}} & 6.5 &
   Session leakage via URLs (history/logs/\texttt{Referer}) \\
 \bottomrule
 \end{tabularx}
@@ -1369,6 +1414,34 @@ jobs:
 This pipeline step automatically fails any build introducing a dependency with a CVSS score
 of 7 or higher, enforcing supply chain security as a mandatory quality gate consistent with
 DevSecOps principles.
+
+Dependabot's automated update behaviour is further controlled through a
+\texttt{.github/dependabot.yml} configuration file committed to the repository. A
+representative configuration for a Node.js project with GitHub Actions workflow monitoring
+is shown below:
+
+\begin{lstlisting}[caption={.github/dependabot.yml --- Scheduled Dependabot update configuration}]
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "security"
+      - "dependencies"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+\end{lstlisting}
+
+This configuration instructs Dependabot to check both \texttt{npm} packages and GitHub
+Actions workflow versions on a weekly schedule, automatically opening pull requests for
+available updates. Integrating this file into the repository ensures dependency monitoring
+is always active without requiring manual configuration through the GitHub UI.
 
 \newpage
 
